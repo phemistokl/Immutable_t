@@ -142,7 +142,18 @@ console.log(result);
  * Получить id пользователя с суммарной макcимальной потраченной суммой
 */
 {
-
+const result = users.reduce((total, object) => total.concat({[object.get('id')]: object.get('orders')
+                    .reduce((list, obj) => (list + obj.get('sum')), 0)}), new Map);
+const newres = result.toJS();
+var max = 0;
+var maxKey = 0;
+for (var key in newres) {   
+  if (max < newres[key]) {
+    max = newres[key];
+    maxKey = key;
+  }
+}
+console.log(max, maxKey);
 }
 
 /**
@@ -150,7 +161,10 @@ console.log(result);
  * Получить список заказов в выбранным статусом
 */
 {
-    const status = 'DELIVERED';
+const status = 'DELIVERED';
+const result = users.reduce((total, object) => total.concat(object.get('orders')), new List)
+                    .filter(user => user.get('status').includes(status));
+console.log(result.toJS());
 
 }
 
@@ -159,7 +173,8 @@ console.log(result);
  * Получить всех пользователей, последний заказ которых был совершен в январе 2015 года
 */
 {
-
+const result = users.filter(user => new Date(user.getIn(['orders', user.get('orders').toJS().length-1, 'date']).split('-').reverse().join(',')).getTime() < new Date('2015,01,31').getTime());
+console.log(result.toJS());
 }
 
 /**
@@ -167,8 +182,13 @@ console.log(result);
  * Получить среднюю сумму заказа за выбранный период
 */
 {
-    const from = '11-01-2015';
-    const to = '02-02-2015';
+const from = '11-01-2015';
+const to = '02-02-2015';
+
+const result = users.reduce((total, object) => total.concat(object.get('orders')), new List)
+                    .filter(user => (new Date(user.get('date').split('-').reverse().join(',')).getTime() >= new Date(from.split('-').reverse().join(',')).getTime()) && (new Date(user.get('date').split('-').reverse().join(',')).getTime() <= new Date(to.split('-').reverse().join(',')).getTime()))
+                    .reduce((sum, current) => (sum + current.get('sum')), 0);
+console.log(result);
 
 }
 
@@ -177,7 +197,16 @@ console.log(result);
  * Определить день, в который было совершено наибольшее количество заказов
 */
 {
+const result = users.reduce((total, object) => total.concat(object.get('orders')), new List).toJS()
+                    .reduce((list, obj) => {list[obj.date] = (list[obj.date] || 0) + 1; return list}, {});
 
+let totalResult = 0;
+for(let key in result) {
+    if (result[key] > totalResult) {
+    totalResult = key;
+  }
+}
+console.log(totalResult);
 }
 
 /**
@@ -196,5 +225,33 @@ console.log(result);
  *      добавится строка 'books' (если ее там не было)
 */
 {
+function updateUserInfo(users, userId, info) {
+  let field = 0;
+  let value = 0;
+    for (let key in info) {
+    field = key;
+    value = info[key];
+  }
+  
+  const result = users.map(function (user) {
+    if (user.get('id') == userId) {
+        if (typeof user.get(field) !== 'object' ) {
+        return user.set(field, value)
+      } else {
+        let arr = user.get(field).toJS();
+        if (user.get(field).includes(value)) {
+            return user
+        } else {
+            return user.set(field, [...arr, value])
+        }
+      };
+    } else {
+        return user
+    };
+  });
+  console.log(result.toJS());
+}
 
+updateUserInfo(users, 2, { age: 23 });
+//updateUserInfo(users, 1, { interests: 'cars' });
 }
